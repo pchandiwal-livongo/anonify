@@ -128,7 +128,7 @@ class AnonymizationReporter:
             'columns': list(original_df.columns),
             'total_records': len(original_df),
             'generation_time': datetime.now().isoformat(),
-            'anonify_version': '0.1.0'
+            'anonify_version': '0.1.1'
         }
         
         # Column analysis
