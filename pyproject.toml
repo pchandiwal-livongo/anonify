@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "anonify"
 version = "0.1.0"
 description = "A comprehensive Python package for data de-identification with scoring and visualization"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Parag Chandiwal", email = "chandiwalp@gmail.com"}
 ]
@@ -63,22 +64,21 @@ dev = [
     "build>=0.7.0",
     "twine>=3.0.0",
 ]
-all = [
-    "anonify[visualization,dev]"
-]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/anonify"
-Documentation = "https://github.com/yourusername/anonify#readme"
-Repository = "https://github.com/yourusername/anonify.git"
-"Bug Tracker" = "https://github.com/yourusername/anonify/issues"
+Homepage = "https://github.com/pchandiwal-livongo/anonify"
+Documentation = "https://github.com/pchandiwal-livongo/anonify#readme"
+Repository = "https://github.com/pchandiwal-livongo/anonify.git"
+"Bug Tracker" = "https://github.com/pchandiwal-livongo/anonify/issues"
 
 [project.scripts]
 anonify = "anonify.main:main"
 anonify-report = "anonify.main:generate_report_cli"
 
-[tool.setuptools]
-packages = ["anonify", "anonify.modules", "anonify.analysis", "anonify.utils"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["anonify*"]
+exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 anonify = ["py.typed"]
@@ -99,4 +99,4 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "--cov=anonify --cov-report=html --cov-report=term-missing" 
+addopts = "--cov=src/anonify --cov-report=html --cov-report=term-missing" 
