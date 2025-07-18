@@ -40,7 +40,7 @@ def deidentify(dataframe: pd.DataFrame,
                return_scores: bool = False,
                generate_report: bool = False,
                dataset_name: Union[str, None] = None,
-               report_output_dir: str = "anonify_reports") -> Union[pd.DataFrame, Dict[str, Any]]:
+               report_output_dir: Union[str, None] = None) -> Union[pd.DataFrame, Dict[str, Any]]:
     """
     Main function to de-identify a pandas DataFrame.
     
@@ -66,6 +66,46 @@ def deidentify(dataframe: pd.DataFrame,
     else:
         config = yaml_config
         logger.info("Using provided configuration dictionary")
+    
+    # Handle both direct column config and wrapped config formats
+    if 'columns' not in config:
+        # Direct format: {'col1': {'method': 'fake'}, 'col2': {'method': 'hash'}}
+        # Convert to expected format: {'columns': {'col1': {'method': 'fake'}, ...}}
+        formatted_config = {'columns': {}}
+        for column_name, column_config in config.items():
+            if isinstance(column_config, dict) and 'method' in column_config:
+                # Convert method-based config to action-based config
+                method = column_config['method']
+                method_params = {k: v for k, v in column_config.items() if k != 'method'}
+                
+                # Handle special cases for different methods
+                if method == 'fake':
+                    # For fake method, use the fake_type directly as the value
+                    fake_type = method_params.get('fake_type', 'name')
+                    formatted_config['columns'][column_name] = {method: fake_type}
+                elif method == 'randomize':
+                    # For randomize, map the user-friendly params to expected structure
+                    randomize_params = {}
+                    # Default to random_element if no randomize_method specified
+                    randomize_params['method'] = method_params.get('randomize_method', 'random_element')
+                    if 'values' in method_params:
+                        randomize_params['elements'] = method_params['values']
+                    # Copy other parameters as-is
+                    for key, value in method_params.items():
+                        if key not in ['randomize_method', 'values']:
+                            randomize_params[key] = value
+                    formatted_config['columns'][column_name] = {method: randomize_params}
+                elif method == 'null_column':
+                    # For null_column, use boolean value
+                    formatted_config['columns'][column_name] = {method: True}
+                elif method == 'do_not_change':
+                    # For do_not_change, use boolean value
+                    formatted_config['columns'][column_name] = {method: True}
+                else:
+                    # For other methods (hash, obfuscate), use params as-is
+                    formatted_config['columns'][column_name] = {method: method_params}
+        config = formatted_config
+        logger.info("Converted direct column configuration to expected format")
     
     # Store original for comparison
     original_df = dataframe.copy()
@@ -122,7 +162,7 @@ def deidentify_from_file(input_file: str,
                         output_file: Union[str, None] = None,
                         return_scores: bool = False,
                         generate_report: bool = False,
-                        report_output_dir: str = "anonify_reports") -> Union[str, Dict[str, Any]]:
+                        report_output_dir: Union[str, None] = None) -> Union[str, Dict[str, Any]]:
     """
     De-identify data from a file.
     
@@ -197,7 +237,7 @@ Examples:
     parser.add_argument('-o', '--output', help='Output CSV file (default: input_file_anonymized.csv)')
     parser.add_argument('--scores', action='store_true', help='Calculate and display anonymization scores')
     parser.add_argument('--report', action='store_true', help='Generate comprehensive HTML report')
-    parser.add_argument('--report-dir', default='anonify_reports', help='Directory for report output')
+    parser.add_argument('--report-dir', help='Directory for report output (required if --report is used)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     
     args = parser.parse_args()
@@ -260,7 +300,7 @@ def generate_report_cli():
     parser.add_argument('original_file', help='Original CSV file')
     parser.add_argument('anonymized_file', help='Anonymized CSV file')
     parser.add_argument('-c', '--config', help='YAML configuration file used for anonymization')
-    parser.add_argument('-o', '--output-dir', default='anonify_reports', help='Output directory for reports')
+    parser.add_argument('-o', '--output-dir', help='Output directory for reports (required)')
     parser.add_argument('-f', '--formats', nargs='+', default=['html'], 
                        choices=['html', 'json', 'csv'], help='Report formats to generate')
     parser.add_argument('--name', help='Custom name for the report')

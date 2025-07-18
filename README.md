@@ -76,23 +76,168 @@ pip install -e .                 # Core functionality only
 
 ## ⚡ Quick Start
 
+### Method 1: Direct Configuration
+
 ```python
 import anonify
 import pandas as pd
 
-# Load your data
-df = pd.read_csv('sensitive_data.csv')
+# Create sample data
+data = {
+    'name': ['Alice', 'Bob', 'Charlie'],
+    'email': ['alice@example.com', 'bob@example.com', 'charlie@example.com'],
+    'ssn': ['123-45-6789', '987-65-4321', '555-55-5555'],
+    'salary': [50000, 60000, 70000]
+}
+df = pd.DataFrame(data)
 
-# Quick anonymization
-anonymized_df = anonify.deidentify(df, {
+# Direct method configuration
+config = {
     'name': {'method': 'fake', 'fake_type': 'name'},
-    'email': {'method': 'hash'},
+    'email': {'method': 'hash', 'salt': 'email_salt'},
     'ssn': {'method': 'null_column'},
     'salary': {'method': 'randomize', 'values': [30000, 50000, 70000, 90000]}
-})
+}
 
-# Generate anonymization report
-report = anonify.generate_quick_report(df, anonymized_df, output_path='anonymization_report.html')
+anonymized_df = anonify.deidentify(df, config)
+
+print("Original data:")
+print(df)
+print("\nAnonymized data:")
+print(anonymized_df)
+```
+
+### Method 2: YAML Configuration
+
+First, create a YAML configuration file (`anonymization_config.yaml`):
+
+```yaml
+# Configuration for employee data anonymization
+name:
+  method: fake
+  fake_type: name
+
+email:
+  method: hash
+  salt: secure_email_salt
+
+ssn:
+  method: null_column
+
+salary:
+  method: randomize
+  randomize_method: random_element
+  values: [30000, 40000, 50000, 60000, 70000, 80000, 90000]
+
+department:
+  method: randomize
+  randomize_method: random_elements
+  values: ["Engineering", "Marketing", "Sales", "HR", "Finance"]
+  weights: [0.3, 0.2, 0.2, 0.15, 0.15]
+  length: 1
+  unique: false
+
+hire_date:
+  method: obfuscate
+  format: "%Y-%m-%d"
+  threshold: 90
+  min_range: "2020-01-01"
+  max_range: "2024-12-31"
+```
+
+Then use it in your Python code:
+
+```python
+import anonify
+import pandas as pd
+
+# Load data
+df = pd.read_csv('employee_data.csv')
+
+# Method 1: Use YAML file path
+anonymized_df = anonify.deidentify(df, 'anonymization_config.yaml')
+
+# Method 2: Load YAML manually
+import yaml
+with open('anonymization_config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+anonymized_df = anonify.deidentify(df, config)
+
+print(f"Anonymized {len(df)} records with {len(df.columns)} columns")
+```
+
+### Report Generation
+
+```python
+import anonify
+import pandas as pd
+import tempfile
+
+# Create sample data
+data = {
+    'customer_id': [1, 2, 3, 4, 5],
+    'name': ['Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson', 'Eva Brown'],
+    'email': ['alice@email.com', 'bob@email.com', 'carol@email.com', 'david@email.com', 'eva@email.com'],
+    'age': [28, 35, 42, 31, 29],
+    'salary': [65000, 75000, 85000, 70000, 68000],
+    'department': ['Engineering', 'Marketing', 'Sales', 'Engineering', 'HR']
+}
+df = pd.DataFrame(data)
+
+# Anonymize the data
+config = {
+    'customer_id': {'method': 'hash', 'salt': 'customer_salt'},
+    'name': {'method': 'fake', 'fake_type': 'name'},
+    'email': {'method': 'hash', 'salt': 'email_salt'},
+    'age': {'method': 'randomize', 'values': [25, 30, 35, 40, 45, 50]},
+    'salary': {'method': 'obfuscate', 'noise_factor': 0.1},
+    'department': {'method': 'do_not_change'}
+}
+
+anonymized_df = anonify.deidentify(df, config)
+
+# Generate comprehensive report with scoring and visualizations
+with tempfile.TemporaryDirectory() as temp_dir:
+    try:
+        report_path = anonify.generate_quick_report(
+            original_df=df,
+            anonymized_df=anonymized_df,
+            config=config,
+            dataset_name="Employee Dataset",
+            output_dir=temp_dir
+        )
+        print(f"✓ Report generated: {report_path}")
+        print("✓ Report includes:")
+        print("  - Anonymization score and interpretation")
+        print("  - Column-by-column analysis")
+        print("  - Interactive visualizations")
+        print("  - Statistical comparisons")
+        
+    except Exception as e:
+        print(f"Report generation requires visualization dependencies: {e}")
+        print("Install with: pip install anonify[visualization]")
+
+# For production use, specify a permanent directory:
+# report_path = anonify.generate_quick_report(
+#     df, anonymized_df, config, output_dir="/path/to/reports"
+# )
+```
+
+### CLI Usage
+
+```bash
+# Anonymize a CSV file using YAML configuration
+python -m anonify data.csv config.yaml --output anonymized_data.csv
+
+# Generate a report comparing original and anonymized data
+python -m anonify report original.csv anonymized.csv -c config.yaml -o ./reports
+
+# With additional options
+python -m anonify data.csv config.yaml \
+    --output anonymized_data.csv \
+    --report \
+    --report-dir ./reports \
+    --verbose
 ```
 
 ## 🔬 Advanced Features
@@ -104,93 +249,105 @@ report = anonify.generate_quick_report(df, anonymized_df, output_path='anonymiza
 - **Reversible Hashing**: Optionally use keyed hash for reversible pseudonymization
 - **Sensitive Data Detection**: Automatic scanner suggests columns that may need protection
 - **Compliance Ready**: Designed with HIPAA/GDPR requirements in mind
+## 📊 Anonymization Scoring Methodology
 
-## Scoring
-## Scoring Methodology
+Anonify provides comprehensive statistical scoring to quantify anonymization effectiveness using a three-step mathematical framework:
 
 ### Step 1: Column-wise Distance Calculation
 
-#### A. Categorical Columns
+#### 🏷️ Categorical Columns
 
-- **Cramér’s V**:  
-  Measures association between original and de-identified columns.  
-  - Formula:  
-    \( V = \sqrt{ \frac{\chi^2 / n}{\min(k-1, r-1)} } \)
-    - \( \chi^2 \): chi-square statistic  
-    - \( n \): number of samples  
-    - \( k, r \): number of categories in each dataset  
-  - **Normalized Distance**: \( 1 - V \)  
-    (V=1 means perfect association, V=0 means independence)
+**Cramér's V** - Measures association between original and anonymized columns:
 
-- **Jaccard Distance** (for unique value sets):  
-  \( d_J(A, B) = 1 - \frac{|A \cap B|}{|A \cup B|} \)  
-  Normalized between 0 and 1.
+```
+V = √(χ² / n) / min(k-1, r-1)
+```
+Where:
+- `χ²` = chi-square statistic  
+- `n` = number of samples  
+- `k, r` = number of categories in each dataset  
 
-#### B. Numeric Columns
+**Normalized Distance**: `1 - V` (V=1 means perfect association, V=0 means independence)
 
-- **Wasserstein Distance** (“Earth Mover’s”):  
-  \( W(P, Q) = \inf_{\gamma \in \Gamma(P, Q)} \int |x - y| d\gamma(x, y) \)  
-  Normalize by the range:  
-  \( D_{num} = \frac{W(P, Q)}{R} \)  
-  (\( R \): range of original column)
+**Jaccard Distance** - For unique value sets:
 
-- **Kolmogorov-Smirnov Statistic**:  
-  \( D_{KS} = \sup_x |F_{orig}(x) - F_{deid}(x)| \)  
-  Normalized between 0 and 1.
+```
+d_J(A, B) = 1 - |A ∩ B| / |A ∪ B|
+```
 
-- **Mean Shift**:  
-  \( D_{mean} = \frac{|mean_{orig} - mean_{deid}|}{std_{orig}} \)  
-  Clip or cap at 1 if necessary.
+Normalized between 0 and 1.
 
-#### C. Text Columns
+#### 🔢 Numeric Columns
 
-- **% of Unique Values Replaced**:  
-  \( D_{uniq} = 1 - \frac{|U_{orig} \cap U_{deid}|}{|U_{orig}|} \)
+**Wasserstein Distance** ("Earth Mover's Distance"):
 
-- **Levenshtein or Jaro Similarity**:  
-  For each value pair, compute similarity.  
-  **Distance:** \( D_{text} = 1 - \text{average similarity} \)
+```
+W(P, Q) = minimum cost to transform distribution P into Q
+D_num = W(P, Q) / R
+```
+Where `R` = range of original column
 
----
+**Kolmogorov-Smirnov Statistic**:
+
+```
+D_KS = sup_x |F_original(x) - F_anonymized(x)|
+```
+
+**Mean Shift**:
+
+```
+D_mean = |mean_original - mean_anonymized| / std_original
+```
+
+#### 📝 Text Columns
+
+**Percentage of Unique Values Replaced**:
+
+```
+D_unique = 1 - |U_original ∩ U_anonymized| / |U_original|
+```
+
+**Levenshtein/Jaro Similarity**:
+
+```
+D_text = 1 - average_similarity_score
+```
 
 ### Step 2: Column Distance Aggregation
 
-- For **categorical** columns:  
-  \( D_{cat} = mean(1 - V, d_J) \)
+**Categorical columns**: `D_cat = mean(1 - V, d_J)`
 
-- For **numeric** columns:  
-  \( D_{num} = mean(\text{normalized Wasserstein}, D_{KS}, D_{mean}) \)
+**Numeric columns**: `D_num = mean(normalized_Wasserstein, D_KS, D_mean)`
 
-- For **text** columns:  
-  \( D_{text} = mean(D_{uniq}, D_{levenshtein}) \)
+**Text columns**: `D_text = mean(D_unique, D_levenshtein)`
 
-*All metrics are normalized to [0, 1].*
-
----
+*All metrics normalized to [0, 1]*
 
 ### Step 3: Global Anonymization Score
 
-Aggregate all columns using a weighted mean:
+**Weighted Mean Across All Columns**:
 
-\[
-D_{global} = \frac{1}{N} \sum_{i=1}^N w_i D_i
-\]
+```
+D_global = (1/N) × Σ(w_i × D_i)
+```
 
-- \( N \): total columns  
-- \( D_i \): normalized distance for column \( i \)  
-- \( w_i \): column weight (default = 1)
+Where:
+- `N` = total columns  
+- `D_i` = normalized distance for column i  
+- `w_i` = column weight (default = 1)
 
-**Final Score (scaled to 1–100):**
+**Final Score (scaled to 1–100)**:
 
-\[
-\text{anonify\_score} = 1 + 99 \times D_{global}
-\]
+```
+anonify_score = 1 + 99 × D_global
+```
 
-- **1**: Original and anonymized are almost identical
-- **100**: No recognizable link between original and anonymized data
-
----
-
+#### Score Interpretation:
+- **1-20**: Minimal anonymization - data largely unchanged
+- **21-40**: Low anonymization - some patterns preserved  
+- **41-60**: Moderate anonymization - balanced privacy/utility
+- **61-80**: High anonymization - strong privacy protection
+- **81-100**: Maximum anonymization - no recognizable patterns 
 ## 📁 Project Structure
 
 Following modern Python packaging standards with src layout:

@@ -20,7 +20,7 @@ class AuditLogger:
     def __init__(self, 
                  name: str,
                  log_level: str = "INFO",
-                 log_to_file: bool = True,
+                 log_to_file: bool = False,
                  log_dir: str = "anonify_logs",
                  json_format: bool = False,
                  include_audit: bool = True):
@@ -327,6 +327,7 @@ class JSONFormatter(logging.Formatter):
 def setup_logger(name: str, 
                 log_level: str = "INFO",
                 enhanced: bool = True,
+                log_to_file: bool = False,
                 **kwargs) -> Union[logging.Logger, AuditLogger]:
     """
     Setup logger with optional enhanced audit capabilities.
@@ -341,7 +342,7 @@ def setup_logger(name: str,
         Logger instance
     """
     if enhanced:
-        return AuditLogger(name, log_level=log_level, **kwargs)
+        return AuditLogger(name, log_level=log_level, log_to_file=log_to_file, **kwargs)
     else:
         # Fallback to basic logger
         logger = logging.getLogger(name)
