@@ -7,8 +7,7 @@ name = "anonify"
 version = "0.1.0"
 description = "A comprehensive Python package for data de-identification with scoring and visualization"
 readme = "README.md"
-license = "MIT"
-license_files = ["LICENSE"]
+license = {file = "LICENSE"}
 authors = [
     {name = "Parag Chandiwal", email = "chandiwalp@gmail.com"}
 ]
