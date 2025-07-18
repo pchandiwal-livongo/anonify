@@ -7,8 +7,8 @@ data de-identification with built-in scoring and reporting capabilities.
 
 # Version info
 __version__ = "0.1.0"
-__author__ = "Anonify Team"
-__email__ = "contact@anonify.com"
+__author__ = "Parag Chandiwal"
+__email__ = "chandiwalp@gmail.com"
 
 # Core functionality
 from .utils.logger import setup_logger
