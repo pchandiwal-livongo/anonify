@@ -49,17 +49,71 @@ class AnonymizationScorer:
             Cramér's V value (0-1, where 1 indicates perfect association)
         """
         try:
+            # Remove missing values from both series
+            x_clean = x.dropna()
+            y_clean = y.dropna()
+            
+            # Handle edge cases
+            if len(x_clean) == 0 or len(y_clean) == 0:
+                return 0.0
+            
+            if len(x_clean) != len(y_clean):
+                # If lengths don't match after dropping NAs, align them
+                min_len = min(len(x_clean), len(y_clean))
+                x_clean = x_clean.iloc[:min_len]
+                y_clean = y_clean.iloc[:min_len]
+            
+            # Check for constant columns (no variation)
+            if len(x_clean.unique()) == 1 or len(y_clean.unique()) == 1:
+                # If one column is constant, return 0 (no association)
+                return 0.0
+            
             # Create contingency table
-            confusion_matrix = pd.crosstab(x, y)
-            chi2 = stats.chi2_contingency(confusion_matrix)[0]
+            confusion_matrix = pd.crosstab(x_clean, y_clean)
+            
+            # Check if contingency table is valid
+            if confusion_matrix.size == 0:
+                return 0.0
+            
+            # Calculate chi-square statistic
+            chi2_result = stats.chi2_contingency(confusion_matrix)
+            chi2 = chi2_result[0]
+            
             n = confusion_matrix.sum().sum()
-            phi2 = chi2 / n
+            if n <= 1:
+                return 0.0
+            
+            # Calculate basic Cramér's V
             r, k = confusion_matrix.shape
+            
+            # Handle edge case where one dimension is 1
+            if r == 1 or k == 1:
+                return 0.0
+            
+            # Apply bias correction (Bergsma & Wicher, 2013)
+            phi2 = chi2 / n
             phi2corr = max(0, phi2 - ((k-1)*(r-1))/(n-1))
             rcorr = r - ((r-1)**2)/(n-1)
             kcorr = k - ((k-1)**2)/(n-1)
-            return np.sqrt(phi2corr / min((kcorr-1), (rcorr-1)))
-        except:
+            
+            # Ensure we don't divide by zero or negative values
+            denominator = min((kcorr-1), (rcorr-1))
+            if denominator <= 0:
+                # Fall back to uncorrected Cramér's V
+                denominator = min(k-1, r-1)
+                if denominator <= 0:
+                    return 0.0
+                cramers_v = np.sqrt(phi2 / denominator)
+            else:
+                cramers_v = np.sqrt(phi2corr / denominator)
+            
+            # Ensure result is valid and in range [0, 1]
+            if np.isnan(cramers_v) or np.isinf(cramers_v):
+                return 0.0
+            
+            return max(0.0, min(1.0, float(cramers_v)))
+            
+        except (ValueError, ZeroDivisionError, TypeError, IndexError):
             return 0.0
     
     def jaccard_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -111,7 +165,7 @@ class AnonymizationScorer:
                 return 0.0 if wd == 0 else 1.0
                 
             return min(1.0, wd / x_range)
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def kolmogorov_smirnov_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -134,7 +188,7 @@ class AnonymizationScorer:
                 
             ks_stat, _ = stats.ks_2samp(x_clean, y_clean)
             return ks_stat
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def mean_shift_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -162,7 +216,7 @@ class AnonymizationScorer:
                 return 0.0 if mean_diff == 0 else 1.0
                 
             return min(1.0, mean_diff / x_std)
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def text_similarity_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -200,12 +254,12 @@ class AnonymizationScorer:
                     try:
                         sim = difflib.SequenceMatcher(None, str(x_str.iloc[i]), str(y_str.iloc[i])).ratio()
                         similarities.append(sim)
-                    except:
+                    except (IndexError, AttributeError, TypeError):
                         similarities.append(0.0)
                 
                 avg_similarity = np.mean(similarities) if similarities else 0.0
                 string_similarity_dist = 1 - avg_similarity
-        except:
+        except (ValueError, TypeError, AttributeError):
             string_similarity_dist = 1.0
         
         # Combine metrics
@@ -231,7 +285,7 @@ class AnonymizationScorer:
         try:
             pd.to_numeric(series_clean)
             return 'numerical'
-        except:
+        except (ValueError, TypeError):
             pass
         
         # Check if it's categorical (limited unique values relative to total)
@@ -267,7 +321,7 @@ class AnonymizationScorer:
             wasserstein_dist = self.wasserstein_distance_normalized(original, anonymized)
             ks_dist = self.kolmogorov_smirnov_distance(original, anonymized)
             mean_shift_dist = self.mean_shift_distance(original, anonymized)
-            distance = np.mean([wasserstein_dist, ks_dist, mean_shift_dist])
+            distance = float(np.mean([wasserstein_dist, ks_dist, mean_shift_dist]))
             
         else:  # text
             distance = self.text_similarity_distance(original, anonymized)

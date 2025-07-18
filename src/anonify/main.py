@@ -110,9 +110,12 @@ def deidentify(dataframe: pd.DataFrame,
     # Store original for comparison
     original_df = dataframe.copy()
     
+    # Create a copy for anonymization (preserve original)
+    dataframe_copy = dataframe.copy()
+    
     # Perform anonymization
     logger.info(f"Processing {len(dataframe)} records with {len(dataframe.columns)} columns")
-    anonymized_df = preprocess(dataframe, config)
+    anonymized_df = preprocess(dataframe_copy, config)
     logger.info("De-identification completed")
     
     # Prepare return value

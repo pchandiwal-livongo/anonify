@@ -4,25 +4,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anonify"
-version = "0.1.0"
-description = "A comprehensive Python package for data de-identification with scoring and visualization"
+version = "0.2.0"
+description = "Comprehensive data de-identification with built-in scoring and reporting"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Parag Chandiwal", email = "chandiwalp@gmail.com"}
+    { name = "Parag Chandiwal", email = "chandiwalp@gmail.com" }
 ]
 maintainers = [
     {name = "Parag Chandiwal", email = "chandiwalp@gmail.com"}
 ]
 keywords = [
-    "data", "anonymization", "deidentification", "privacy", "gdpr", "hipaa", 
-    "data-science", "machine-learning", "statistics", "security"
+    "data-anonymization", "data-privacy", "de-identification", "deidentification", 
+    "GDPR", "HIPAA", "healthcare-data", "medical-data", "data-protection", 
+    "privacy-protection", "data-security", "anonymize", "pseudonymization", 
+    "data-masking", "PII-removal", "PHI-protection", "sensitive-data", 
+    "data-science", "machine-learning", "privacy-engineering", "compliance"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Legal Industry",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",

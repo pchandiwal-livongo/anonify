@@ -46,14 +46,14 @@ class AnonymizationVisualizer:
         try:
             pd.to_numeric(series_clean)
             return 'numerical'
-        except:
+        except (ValueError, TypeError):
             pass
         
         # Check if datetime
         try:
             pd.to_datetime(series_clean)
             return 'datetime'
-        except:
+        except (ValueError, TypeError):
             pass
         
         # Check if categorical
