@@ -7,7 +7,9 @@ def null_column(df, column):
     :return: DataFrame with nulled column.
     """
     if column in df.columns:
-        df[column] = None
+        # Create a copy to avoid modifying the original
+        df_copy = df.copy()
+        df_copy[column] = None
+        return df_copy
     else:
         raise ValueError(f"Column '{column}' does not exist in the DataFrame")
-    return df

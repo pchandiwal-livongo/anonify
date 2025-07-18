@@ -6,7 +6,7 @@ data de-identification with built-in scoring and reporting capabilities.
 """
 
 # Version info
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Parag Chandiwal"
 __email__ = "chandiwalp@gmail.com"
 
