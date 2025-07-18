@@ -1,55 +1,109 @@
 # Anonify
 
-Anonify is a Python package designed for data de-identification, making it easier to anonymize sensitive information in datasets. It provides a range of modules for obfuscating, hashing, nullifying, and randomizing data columns.
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![PyPI](https://img.shields.io/pypi/v/anonify.svg)
 
-## Features
+A comprehensive Python package for data de-identification with built-in scoring, visualization, and reporting capabilities. Designed following modern Python packaging standards for reliability and ease of use.
 
-- **Data Obfuscation**: Replace sensitive data with realistic but non-sensitive equivalents.
-- **Hashing**: Securely hash sensitive data columns.
-- **Nullification**: Replace data with null values for complete anonymization.
-- **Randomization**: Randomize data to preserve patterns without revealing actual values.
-- **Logging**: Integrated logging for tracking data processing steps.
+## 🚀 Features
 
-anonify
+- **Data Obfuscation**: Replace sensitive data with realistic but non-sensitive equivalents
+- **Hashing**: Securely hash sensitive data columns with cryptographic functions
+- **Nullification**: Replace data with null values for complete anonymization
+- **Randomization**: Randomize data to preserve patterns without revealing actual values
+- **Statistical Scoring**: Quantify anonymization effectiveness with mathematical metrics
+- **Visualization**: Generate interactive charts comparing original vs anonymized data
+- **Comprehensive Reporting**: Automated reports with scoring and visualizations
+- **Audit Logging**: Integrated logging for tracking all transformation steps
 
-The practical, modular, and auditable Python package for fast and flexible data de-identification.
+## 🎯 Why Anonify?
 
-Why anonify?
+Protecting sensitive data is not just compliance—it's trust. Anonify helps you easily anonymize and de-identify tabular data, so you can share, analyze, and develop without exposing real personal information.
 
-Protecting sensitive data is not just compliance—it’s trust. anonify helps you easily anonymize and de-identify tabular data, so you can share, analyze, and develop without exposing real personal information.
+### Key Capabilities
 
-Key Features
+- **Column-wise De-identification**: Specify treatment for each column via YAML config
+- **Flexible Inputs**: Accepts both pandas and Spark DataFrames
+- **Configurable Workflows**: Use YAML configs for repeatable, transparent processes
+- **Statistical Validation**: Built-in metrics to verify anonymization quality
+- **Modern Python**: Built with current packaging standards and best practices
 
-Column-wise De-identification: Specify treatment for each column via YAML config.
-Obfuscation: Replace real values with realistic fakes (e.g., names, addresses, dates).
-Hashing: Cryptographically hash sensitive fields (with salt).
-Nullification: Null out columns for strict privacy.
-Randomization: Replace values with random (or weighted random) selections.
-Logging & Audit Trails: Built-in logs track every transformation.
-Report Generation: Quantify how well data is anonymized, and compare before/after.
-Flexible Inputs: Accepts both pandas and Spark DataFrames.
-Configurable: Use YAML configs for repeatable, transparent workflows.
+## 📦 Installation
 
-## Supported Modes
+### For Users
 
-Method	Description
-fake	Replace with realistic fake values (using Faker).
-hash	Replace with hash of value + salt.
-null_column	Replace entire column with null values.
-randomize	Replace with random/weighted values from list.
-obfuscate	Obfuscate values (e.g. shift dates, add noise).
-do_not_change	Leave column untouched.
+Install the latest stable version from PyPI:
 
-## Advanced Features
+```bash
+pip install anonify
+```
 
-Spark Support: Use the same config to anonymize pyspark.sql.DataFrame for big data.
-Custom Functions: Register your own anonymization logic per column.
-Multi-level Audit Logging: Output logs in JSON, CSV, or DB.
-Batch Processing: Process large files in chunks.
-Reversible Hashing: (Optionally) use keyed hash for reversible pseudonymization.
-Sensitive Data Detection: Automatic scanner suggests columns that may need protection.
-Anonymization Score Report: Statistical “difference” report (see below).
-Compliance Ready: Designed with HIPAA/GDPR in mind; keep an audit trail.
+### For Developers
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/pchandiwal-livongo/anonify.git
+cd anonify
+```
+
+2. **Create a virtual environment:**
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. **Install in development mode:**
+```bash
+# Install with all development dependencies
+pip install -e .[dev]
+
+# Or install with specific feature sets
+pip install -e .[visualization]  # For plotting features
+pip install -e .                 # Core functionality only
+```
+
+## 🛠️ Supported Anonymization Methods
+
+| Method | Description |
+|--------|-------------|
+| `fake` | Replace with realistic fake values (using Faker) |
+| `hash` | Replace with cryptographic hash of value + salt |
+| `null_column` | Replace entire column with null values |
+| `randomize` | Replace with random/weighted values from list |
+| `obfuscate` | Obfuscate values (e.g., shift dates, add noise) |
+| `do_not_change` | Leave column untouched |
+
+## ⚡ Quick Start
+
+```python
+import anonify
+import pandas as pd
+
+# Load your data
+df = pd.read_csv('sensitive_data.csv')
+
+# Quick anonymization
+anonymized_df = anonify.deidentify(df, {
+    'name': {'method': 'fake', 'fake_type': 'name'},
+    'email': {'method': 'hash'},
+    'ssn': {'method': 'null_column'},
+    'salary': {'method': 'randomize', 'values': [30000, 50000, 70000, 90000]}
+})
+
+# Generate anonymization report
+report = anonify.generate_quick_report(df, anonymized_df, output_path='anonymization_report.html')
+```
+
+## 🔬 Advanced Features
+
+- **Spark Support**: Use the same config to anonymize `pyspark.sql.DataFrame` for big data
+- **Custom Functions**: Register your own anonymization logic per column
+- **Multi-level Audit Logging**: Output logs in JSON, CSV, or database formats
+- **Batch Processing**: Process large files in chunks for memory efficiency
+- **Reversible Hashing**: Optionally use keyed hash for reversible pseudonymization
+- **Sensitive Data Detection**: Automatic scanner suggests columns that may need protection
+- **Compliance Ready**: Designed with HIPAA/GDPR requirements in mind
 
 ## Scoring
 ## Scoring Methodology
@@ -137,44 +191,81 @@ D_{global} = \frac{1}{N} \sum_{i=1}^N w_i D_i
 
 ---
 
-## Installation
+## 📁 Project Structure
 
-Anonify can be installed using pip:
-
-
-
-```bash
-pip install anonify
-```
-
-## Package Structure
-
-After modularization, the anonify package is organized as follows:
+Following modern Python packaging standards with src layout:
 
 ```
 anonify/
-├── __init__.py              # Main package interface
-├── main.py                  # CLI interface and main functions
-├── preprocessor.py          # Data preprocessing utilities
-├── modules/                 # Core anonymization methods
-│   ├── __init__.py
-│   ├── faker.py            # Fake data generation
-│   ├── hasher.py           # Cryptographic hashing
-│   ├── nuller.py           # Nullification methods
-│   ├── obfuscate.py        # Data obfuscation
-│   └── randomizer.py       # Randomization methods
-├── analysis/                # Analysis and reporting tools
-│   ├── __init__.py
-│   ├── scoring.py          # Statistical scoring metrics
-│   ├── visualizer.py       # Data visualization
-│   └── reporter.py         # Report generation
-└── utils/                   # Utility functions
-    ├── __init__.py
-    └── logger.py           # Logging and audit trails
+├── src/
+│   └── anonify/             # Main package (src layout)
+│       ├── __init__.py      # Package interface
+│       ├── main.py          # CLI interface and main functions
+│       ├── preprocessor.py  # Data preprocessing utilities
+│       ├── modules/         # Core anonymization methods
+│       │   ├── __init__.py
+│       │   ├── faker.py     # Fake data generation
+│       │   ├── hasher.py    # Cryptographic hashing
+│       │   ├── nuller.py    # Nullification methods
+│       │   ├── obfuscate.py # Data obfuscation
+│       │   └── randomizer.py # Randomization methods
+│       ├── analysis/        # Analysis and reporting tools
+│       │   ├── __init__.py
+│       │   ├── scoring.py   # Statistical scoring metrics
+│       │   ├── visualizer.py # Data visualization
+│       │   └── reporter.py  # Report generation
+│       └── utils/           # Utility functions
+│           ├── __init__.py
+│           └── logger.py    # Logging and audit trails
+├── tests/                   # Test suite
+├── pyproject.toml          # Modern project configuration
+├── setup.py               # Minimal setup for compatibility
+├── LICENSE                # MIT License
+├── README.md             # This file
+└── MANIFEST.in          # Package data specification
 ```
 
-## Installation
+## 🧪 Testing
 
-Anonify can be installed using pip:
+Run the test suite:
 
-```sh
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src/anonify --cov-report=html
+
+# Run specific test modules
+pytest tests/test_scoring.py
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes following the coding standards
+4. Run tests: `pytest`
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- **Repository**: [https://github.com/pchandiwal-livongo/anonify](https://github.com/pchandiwal-livongo/anonify)
+- **Documentation**: [https://github.com/pchandiwal-livongo/anonify#readme](https://github.com/pchandiwal-livongo/anonify#readme)
+- **Issues**: [https://github.com/pchandiwal-livongo/anonify/issues](https://github.com/pchandiwal-livongo/anonify/issues)
+
+## 👤 Author
+
+**Parag Chandiwal**
+- Email: chandiwalp@gmail.com
+- GitHub: [@pchandiwal-livongo](https://github.com/pchandiwal-livongo)
+
+---
+
+*Built with modern Python packaging standards and best practices.*
+
+
