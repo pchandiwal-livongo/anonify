@@ -1,0 +1,42 @@
+# Include the license file
+include LICENSE
+
+# Include the README
+include README.md
+
+# Include configuration files
+include pyproject.toml
+include setup.py
+
+# Include package data
+recursive-include anonify *.py
+recursive-include test/config_files *.yaml
+recursive-include test/data *.csv
+
+# Include tests
+recursive-include tests *.py
+
+# Exclude development and temporary files
+exclude *.pyc
+exclude .DS_Store
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.so
+recursive-exclude * *.dylib
+recursive-exclude * .git*
+recursive-exclude * .pytest_cache
+recursive-exclude * .coverage*
+recursive-exclude * htmlcov
+recursive-exclude * *.egg-info
+
+# Exclude virtual environments and build artifacts
+prune .venv
+prune venv
+prune build
+prune dist
+prune *.egg-info
+
+# Exclude IDE files
+prune .vscode
+prune .idea
+exclude .gitignore 
