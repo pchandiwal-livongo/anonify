@@ -165,7 +165,7 @@ class AnonymizationScorer:
                 return 0.0 if wd == 0 else 1.0
                 
             return min(1.0, wd / x_range)
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def kolmogorov_smirnov_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -188,7 +188,7 @@ class AnonymizationScorer:
                 
             ks_stat, _ = stats.ks_2samp(x_clean, y_clean)
             return ks_stat
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def mean_shift_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -216,7 +216,7 @@ class AnonymizationScorer:
                 return 0.0 if mean_diff == 0 else 1.0
                 
             return min(1.0, mean_diff / x_std)
-        except:
+        except (ValueError, TypeError, AttributeError):
             return 1.0
     
     def text_similarity_distance(self, x: pd.Series, y: pd.Series) -> float:
@@ -254,12 +254,12 @@ class AnonymizationScorer:
                     try:
                         sim = difflib.SequenceMatcher(None, str(x_str.iloc[i]), str(y_str.iloc[i])).ratio()
                         similarities.append(sim)
-                    except:
+                    except (IndexError, AttributeError, TypeError):
                         similarities.append(0.0)
                 
                 avg_similarity = np.mean(similarities) if similarities else 0.0
                 string_similarity_dist = 1 - avg_similarity
-        except:
+        except (ValueError, TypeError, AttributeError):
             string_similarity_dist = 1.0
         
         # Combine metrics
@@ -285,7 +285,7 @@ class AnonymizationScorer:
         try:
             pd.to_numeric(series_clean)
             return 'numerical'
-        except:
+        except (ValueError, TypeError):
             pass
         
         # Check if it's categorical (limited unique values relative to total)
@@ -321,7 +321,7 @@ class AnonymizationScorer:
             wasserstein_dist = self.wasserstein_distance_normalized(original, anonymized)
             ks_dist = self.kolmogorov_smirnov_distance(original, anonymized)
             mean_shift_dist = self.mean_shift_distance(original, anonymized)
-            distance = float(np.mean([float(wasserstein_dist), float(ks_dist), float(mean_shift_dist)]))
+            distance = float(np.mean([wasserstein_dist, ks_dist, mean_shift_dist]))
             
         else:  # text
             distance = self.text_similarity_distance(original, anonymized)
