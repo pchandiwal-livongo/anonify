@@ -34,7 +34,7 @@ class AnonymizationReporter:
     
     def __init__(self, 
                  template: str = "plotly_white",
-                 output_dir: str = "anonify_reports",
+                 output_dir: Union[str, None] = None,
                  include_visualizations: bool = True):
         """
         Initialize reporter.
@@ -45,15 +45,16 @@ class AnonymizationReporter:
             include_visualizations: Whether to include plotly visualizations
         """
         self.template = template
-        self.output_dir = Path(output_dir)
+        self.output_dir = Path(output_dir) if output_dir else None
         self.include_visualizations = include_visualizations and PLOTLY_AVAILABLE
         self.scorer = AnonymizationScorer()
         
         if self.include_visualizations:
             self.visualizer = AnonymizationVisualizer(template)
         
-        # Create output directory
-        self.output_dir.mkdir(exist_ok=True)
+        # Only create output directory if one is specified
+        if self.output_dir:
+            self.output_dir.mkdir(exist_ok=True)
         
     def generate_comprehensive_report(self,
                                     original_df: pd.DataFrame,
@@ -884,7 +885,9 @@ class AnonymizationReporter:
         </html>
         """
         
-        # Save HTML file
+        # Save HTML file - requires output directory to be set
+        if not self.output_dir:
+            raise ValueError("No output directory specified. Please provide output_dir when creating AnonymizationReporter.")
         html_path = self.output_dir / f"{report_name}.html"
         with open(html_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
@@ -915,6 +918,8 @@ class AnonymizationReporter:
         
         json_data = convert_numpy(json_data)
         
+        if not self.output_dir:
+            raise ValueError("No output directory specified. Please provide output_dir when creating AnonymizationReporter.")
         json_path = self.output_dir / f"{report_name}.json"
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, indent=2, default=str)
@@ -939,6 +944,8 @@ class AnonymizationReporter:
         
         summary_df = pd.DataFrame(summary_data)
         
+        if not self.output_dir:
+            raise ValueError("No output directory specified. Please provide output_dir when creating AnonymizationReporter.")
         csv_path = self.output_dir / f"{report_name}.csv"
         summary_df.to_csv(csv_path, index=False)
         
@@ -955,7 +962,7 @@ def generate_quick_report(original_df: pd.DataFrame,
                         anonymized_df: pd.DataFrame,
                         config: Union[Dict[str, Any], None] = None,
                         dataset_name: Union[str, None] = None,
-                        output_dir: str = "anonify_reports") -> str:
+                        output_dir: Union[str, None] = None) -> str:
     """
     Generate a quick anonymization report.
     
@@ -969,6 +976,8 @@ def generate_quick_report(original_df: pd.DataFrame,
     Returns:
         Path to generated HTML report
     """
+    if not output_dir:
+        raise ValueError("output_dir is required. Please specify a directory to save the report.")
     reporter = AnonymizationReporter(output_dir=output_dir)
     outputs = reporter.generate_comprehensive_report(
         original_df, anonymized_df, config, 
